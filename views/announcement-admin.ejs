@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcement Form</title>
+    <style>
+    nav {
+        background-color: #333;
+        overflow: hidden;
+    }
+
+    nav a {
+        float: left;
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+    nav a:hover {
+        background-color: #ddd;
+        color: black;
+    }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home page</a>
+        <a href="/admin/scanner-page">QR Scanner</a>
+        <a href="/admin/application-form">Application Form</a>
+        <a href="/admin/announcement-form">Announcement Form</a>
+        <a href="/admin/accounting">Accounting</a>
+    </nav>
+    <h2>Create Announcemt</h2>
+
+    <form id="announcementForm">
+        <label for="category">Category:</label>
+        <input type="text" id="category" name="category" required><br>
+
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br>
+
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" rows = "4"  required></textarea><br>
+
+        <button id="submit" type="submit" onclick="submitAnnouncement(event)">Post Announcement</button>
+    </form>
+
+    <div id="announcementsSection">
+        <h2>Announcements</h2>
+        <ul id="announcementsList"></ul>
+    </div>
+
+    <script>
+        async function fetchAnnouncements() {
+            try {
+                const response = await fetch('/get_announcements');
+                const announcements = await response.json();
+                const announcementsList = document.getElementById('announcementsList');
+
+                // Clear existing announcements
+                announcementsList.innerHTML = '';
+
+                // Update the DOM with fetched announcements
+                announcements.forEach((announcement) => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <strong>Category:</strong> ${announcement.category}<br>
+                        <strong>Title:</strong> ${announcement.title}<br>
+                        <strong>Content:</strong> ${announcement.content}<br>
+                        <button onclick="editAnnouncement(${announcement.id})">Edit</button>
+                        <button onclick="deleteAnnouncement(${announcement.id})">Delete</button>
+                        <hr>
+                    `;
+                    announcementsList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error fetching announcements:', error.message);
+            }
+        }
+
+        async function submitAnnouncement(event) {
+            event.preventDefault();
+
+            const category = document.getElementById("category").value;
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+
+            try {
+                const response = await fetch('/submit_announcement', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ category, title, content }),
+                });
+
+                const data = await response.json();
+                console.log('Data output', data);
+                if (response.ok){
+                    alert("Announcement posted successfully!");
+                    displayAnnouncements({ category, title, content });
+                    window.location.href = window.location.href;
+                } else {
+                    alert( `Error: ${data.error || 'Internal Server Error'}`);
+                }
+            } catch (error) {
+                console.error('Error submitting announcement:', error.message);
+                alert('An error occurred while submitting the announcement. Please try again.');
+            }
+        }
+
+
+        function displayAnnouncements({ category, title, content }) {
+            const announcementsList = document.getElementById('announcementsList');
+
+            if (!announcementsList) {
+                console.error('Announcements list not found.');
+                return;
+            }
+
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <strong>Category:</strong> ${category}<br>
+                <strong>Title:</strong> ${title}<br>
+                <strong>Content:</strong> ${content}<br>
+                <button onclick="editAnnouncement()">Edit</button>
+                <button onclick="deleteAnnouncement()">Delete</button>
+                <hr>
+            `;
+
+            announcementsList.appendChild(listItem);
+        }
+
+        async function editAnnouncement(id) {
+        const category = prompt("Enter new category:");
+        const title = prompt("Enter new title:");
+        const content = prompt("Enter new content:");
+
+        // Check if all required parameters are provided
+        if (category !== null && title !== null && content !== null) {
+            try {
+                const response = await fetch(`/edit_announcement/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        category,
+                        title,
+                        content,
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log('Announcement edited successfully');
+                    // After editing, call fetchAnnouncements to update the DOM with the edited announcement
+                    updateAnnouncementInDOM(id, { category, title, content });
+                } else {
+                    console.error('Error editing announcement:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error editing announcement:', error.message);
+            }
+        } else {
+            console.error('All parameters are required.');
+        }
+    }
+
+    function updateAnnouncementInDOM(id, { category, title, content }) {
+    const announcementElement = document.getElementById(`announcement-${id}`);
+    if (announcementElement) {
+        announcementElement.innerHTML = `
+            <strong>Category:</strong> ${category}<br>
+            <strong>Title:</strong> ${title}<br>
+            <strong>Content:</strong> ${content}<br>
+            <button onclick="editAnnouncement(${id})">Edit</button>
+            <button onclick="deleteAnnouncement(${id})">Delete</button>
+            <hr>
+        `;
+    }
+}
+
+    async function deleteAnnouncement(id) {
+    const confirmed = confirm("Are you sure you want to delete this announcement?");
+    if (confirmed) {
+        try {
+            const response = await fetch(`/delete_announcement/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                console.log('Announcement deleted successfully');
+                alert("Announcement deleted successfully!");
+                removeAnnouncementFromDOM(id);
+            } else {
+                console.error('Error deleting announcement:', await response.text());
+            }
+        } catch (error) {
+            console.error('Error deleting announcement:', error.message);
+        }
+    }
+}
+
+function removeAnnouncementFromDOM(id) {
+    const announcementElement = document.getElementById(`announcement-${id}`);
+    if (announcementElement) {
+        announcementElement.remove();
+    }
+}
+
+    window.onload = fetchAnnouncements;
+    </script>
+</body>
+</html>

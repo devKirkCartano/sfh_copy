@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Management</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        nav {
+            background-color: #333;
+            overflow: hidden;
+        }
+
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .membership-form {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .form-group label {
+            width: 45%;
+            box-sizing: border-box;
+            margin-right: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .user-table th, .user-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .user-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home page</a>
+        <a href="/admin/scanner-page">QR Scanner</a>
+        <a href="/admin/application-form">Application Form</a>
+        <a href="/admin/announcement-form">Announcement Form</a>
+        <a href="/admin/accounting">Accounting</a>
+    </nav>
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+
+    <div class="membership-form">
+        <h2>Membership Form</h2>
+        <form action="/submit-membership" method="post" id="membershipForm">
+            <div class="form-group">
+                <label for="firstName">First name:</label>
+                <input type="text" id="firstName" name="firstName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last name:</label>
+                <input type="text" id="lastName" name="lastName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="membershipPlan">Membership Plan:</label>
+                <select id="membershipPlan" name="membershipType" required>
+                    <option value="regular">Regular</option>
+                    <option value="student">Student</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="contactNumber">Contact Number:</label>
+                <input type="tel" id="contactNumber" name="contactNumber">
+            </div>
+
+            <button type="submit" id="submitMembershipButton" disabled>Submit</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Function to fetch and populate user data
+            function fetchAndPopulateUsers() {
+                $.ajax({
+                    url: '/getAllUsers',
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(users) {
+                        const userTableBody = $('#userTableBody');
+                        userTableBody.empty();
+    
+                        users.forEach(user => {
+                            if (!user.subscribedUserId) {
+                                const newRow = `<tr data-user-id="${user.id}" class="user-row clickable-name"><td>${user.firstName} ${user.lastName}</td></tr>`;
+                                userTableBody.append(newRow);
+                            }
+                        });
+    
+                        // Add a click event listener to the common ancestor (userTableBody)
+                        $('#userTableBody').off('click', '.clickable-name');
+                        $('#userTableBody').on('click', '.clickable-name', function() {
+                            $('.user-row').removeClass('active');
+                            $(this).closest('.user-row').addClass('active');
+                            const userId = $(this).closest('.user-row').data('user-id');
+                            fetchUserInfoAndCheckSubscription(userId);
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching user data:', error);
+                    }
+                });
+            }
+    
+            // Function to fetch user information and check subscription status
+            function fetchUserInfoAndCheckSubscription(userId) {
+                $.ajax({
+                    url: `/getUserInfo/${userId}`,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(userData) {
+                        $('#membershipForm').find('[name="firstName"]').val(userData.firstName);
+                        $('#membershipForm').find('[name="lastName"]').val(userData.lastName);
+                        $('#membershipForm').find('[name="membershipType"]').val(userData.membershipType);
+                        $('#membershipForm').find('[name="email"]').val(userData.email);
+                        $('#membershipForm').find('[name="contactNumber"]').val(userData.contactNumber);
+                        // Check if the user is already subscribed
+                        $.ajax({
+                            url: `/checkSubscription/${userId}`,
+                            method: 'GET',
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.subscribed) {
+                                    console.log('User is already subscribed');
+                                    $('#submitMembershipButton').prop('disabled', true);
+                                } else {
+                                    console.log('User is not subscribed');
+                                    $('#submitMembershipButton').prop('disabled', false);
+                                }
+                            },
+                            error: function(error) {
+                                console.error('Error checking subscription:', error);
+                            }
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error fetching user information:', error);
+                    }
+                });
+            }
+    
+            // Initial fetch and populate on document ready
+            fetchAndPopulateUsers();
+    
+            // Submit the membership form
+            $('#membershipForm').submit(function(event) {
+                event.preventDefault();
+                const userId = $('.user-row.active').data('user-id');
+                const formData = $(this).serialize();
+                let url, method;
+                if (userId){
+                    url = `/submitMembership/${userId}`;
+                    method = 'POST';
+                } else {
+                    url = '/createUser';
+                    method = 'POST';
+                }
+                $.ajax({
+                    url: url,
+                    method: method,
+                    data: formData,
+                    success: function(response) {
+                        if (response.success) {
+                            console.log('Form submitted successfully');
+                            $('#membershipForm')[0].reset();
+                            alert('Membership submitted successfully');
+                            fetchAndPopulateUsers();
+                        } else {
+                            if (response.message == 'User is already subscribed') {
+                                alert('User is already subscribed');
+                            } else {
+                                alert('Error submitting membership');
+                            }
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error submitting membership:', error);
+                    }
+                });
+            });
+    
+            // Enable or disable the submit button based on form validity
+            $('#membershipForm').on('input', function() {
+                const formValid = this.checkValidity();
+                $('#submitMembershipButton').prop('disabled', !formValid);
+            });
+        });
+    </script>      
+</body>
+</html>
