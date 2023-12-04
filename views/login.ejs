@@ -1,60 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <!-- Font Icon -->
     <link rel="stylesheet" href="/fonts/material-icon/css/material-design-iconic-font.min.css">
-
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <!-- Main css -->
-    <link rel="stylesheet" href="/css/style.css" type="text/css"/>
+    <link rel="stylesheet" href="/css/style.css" type="text/css" />
+    <!-- Custom styles for this template -->
+    <link href="../css/style.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.min.css">
 </head>
-<body>
-    
-    <div class="main">
+
+<body style="margin: 0;">
+
+    <div class="main" style="background-image: url('/images/stretch.png'); background-size: cover; padding: 200px;">
 
         <!-- Sign in  Form -->
         <section class="sign-in">
-            <div class="container">
+            <div class="container " style="background-color: rgba(236, 240, 241, 0.5);">
                 <div class="signin-content">
                     <div class="signin-image">
-                        <figure><img src="/images/signin-image.jpg" alt="sing up image"></figure>
+                        <figure><img src="/images/stretch_fitness_hub_logo.jpg" alt="sing up image" style="border-radius: 20px;"></figure>
                         <a href="register" class="signup-image-link">Create an account</a>
                     </div>
 
                     <div class="signin-form">
                         <h2 class="form-title">Log in</h2>
-                        <% if (message && message.length > 0) { %>
+                        <% if (message && message.length> 0) { %>
                             <div class="error-message">
-                                <strong><%= message %></strong>
+                                <strong>
+                                    <%= message %>
+                                </strong>
                             </div>
-                        <% } %>
-                        <form method="POST" class="register-form" id="login-form">
-                            <div class="form-group">
-                                <label for="your_email"><i class="zmdi zmdi-account material-icons-name"></i></label>
-                                <input type="text" name="email" id="your_email" placeholder="Your email"/>
-                            </div>
-                            <div class="form-group">
-                                <label for="your_pass"><i class="zmdi zmdi-lock"></i></label>
-                                <input type="password" name="password" id="your_pass" placeholder="Password"/>
-                            </div>
-                            <div class="form-group">
-                                <input type="checkbox" name="remember-me" id="remember-me" class="agree-term" />
-                                <label for="remember-me" class="label-agree-term"><span><span></span></span>Remember me</label>
-                            </div>
-                            <div class="form-group form-button">
-                                <input type="submit" name="login" id="signin" class="form-submit" value="Log in" href="/"/>
-                            </div>
-                        </form>
-                        <div class="social-login">
-                            <span class="social-label">Or login with</span>
-                            <ul class="socials">
-                                <li><a href="#"><i class="display-flex-center zmdi zmdi-facebook"></i></a></li>
-                                <li><a href="#"><i class="display-flex-center zmdi zmdi-twitter"></i></a></li>
-                                <li><a href="#"><i class="display-flex-center zmdi zmdi-google"></i></a></li>
-                            </ul>
-                        </div>
+                            <% } %>
+                                <form method="POST" class="register-form" id="login-form">
+                                    <div class="form-group">
+                                        <label for="your_email"><i
+                                                class="zmdi zmdi-account material-icons-name"></i></label>
+                                        <input class="form-control form-user" type="text" name="email" id="your_email" placeholder="Your email" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="your_pass"><i class="zmdi zmdi-lock"></i></label>
+                                        <input class="form-control form-user" type="password" name="password" id="your_pass" placeholder="Password" />
+                                    </div>
+                                    <div class="form-group">
+                                        <input  type="checkbox" name="remember-me" id="remember-me" class="agree-term" />
+                                        <label for="remember-me"
+                                            class="label-agree-term"><span><span></span></span>Remember me</label>
+                                    </div>
+                                    <div class="form-group form-button">
+                                        <input type="submit" name="login" id="signin" class="form-submit" value="Log in"
+                                            href="/" />
+                                    </div>
+                                </form>
                     </div>
                 </div>
             </div>
@@ -62,4 +66,5 @@
     </div>
     <script src="/vendor/jquery/jquery.min.js"></script>
 </body>
+
 </html>
